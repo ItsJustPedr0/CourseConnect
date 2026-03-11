@@ -1,0 +1,9 @@
+{% if courses_list %}
+    <ul>
+    {% for course in courses_list %}
+        <li><a href="/forum/{{ course.dept.slug }}/{{course.slug}}">{{ course.name }}</a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No courses are available.</p>
+{% endif %}
