@@ -1,8 +1,7 @@
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
+from django.template import loader
+from django.http import Http404
 from django.http import HttpResponse
 
 def index(request):
-  return HttpResponse("Hello, world. Welcome to CourseConnect.")
-# Create your views here.
-
-# Create your views here.
+  return render(request, "home/home.html")

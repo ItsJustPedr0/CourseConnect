@@ -18,7 +18,8 @@ class Prof(models.Model):
   last_name = models.CharField(max_length=100, null=True, blank=True)
   first_name = models.CharField(max_length=100, null=True, blank=True)
   slug = models.SlugField(unique=True, blank=True)
-
+  dept = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True)
+  
   @property
   def full_name(self):
     return f"{self.first_name} {self.last_name}"

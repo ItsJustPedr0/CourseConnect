@@ -1,0 +1,199 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CourseConnect</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+		.parallax {
+			background-image: url("{% static 'home/img/DronePic.jpg' %}");
+			min-height: 835px; 
+			background-attachment: fixed;
+			background-position: center;
+			background-repeat: no-repeat;
+			background-size: cover;
+			color: white;
+		}
+		.navbar {
+			min-height: 100px; 
+			display: flex;
+			align-items: center;
+		}
+        body { 
+			font-family: 'Inter', sans-serif; background-color: #f8f9fa; color: #333; 
+		}
+        .hero-section {
+			background: linear-gradient(135deg, #004a99 0%, #007bff 100%); color: white; padding: 100px 0;
+		}
+        .search-container { 
+			max-width: 700px; margin: 30px auto; 
+		}
+        .card { 
+			border: none; border-radius: 12px; transition: transform 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.05); 
+		}
+        .card:hover { 
+			transform: translateY(-5px); 
+		}
+        .feature-icon { 
+			font-size: 2rem; color: #007bff; margin-bottom: 1rem; 
+		}
+        .result-card { 
+			display: none; margin-top: 20px; 
+		}
+        .report-btn { 
+			color: #dc3545; font-size: 0.8rem; cursor: pointer; text-decoration: none;
+		}
+		
+        .anonymous-badge { 
+			background-color: #6c757d; color: white; font-size: 0.7rem; padding: 2px 8px; border-radius: 20px; 
+		}
+        section { 
+		padding: 60px 0; 	
+		}
+        .bg-white-alt { 
+			background-color: #ffffff;
+		}
+    </style>
+</head>
+<body>
+	<div class="parallax text-center">
+		<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><h1 class="display-1 fw-bold">CourseConnect</h1><br>
+	</div>
+	<nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+    <div class="container-fluid px-lg-5">
+        <a class="navbar-brand fw-bold" href="#">CourseConnect</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item"><a class="nav-link" href="{% url 'home' %}">Home</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'index' %}">Forum</a></li>
+				<li class="nav-item"><a class="nav-link" href="#impact">Syllabi</a></li>
+                <li class="nav-item"><a class="btn btn-outline-light ms-lg-3" href="#">Login (Anonymous)</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+    <!-- Searchbar Section -->
+    <header class="hero-section text-center">
+        <div class="container">
+            <h1 class="display-4 fw-bold">Find Your Next Course with Confidence</h1>
+            <p class="lead">Centralized feedback, past syllabi, and peer reviews in one place.</p>
+            
+            <div class="search-container">
+                <form id="searchForm" class="input-group input-group-lg">
+                    <input type="text" id="searchInput" class="form-control" placeholder="Search professors, courses, or departments..." required>
+                    <button class="btn btn-warning fw-bold" type="submit">Search</button>
+                </form>
+                <div id="loadingSpinner" class="spinner-border text-light mt-3 d-none" role="status"></div>
+                <div id="searchResults" class="text-start mt-4"></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Software Features -->
+    <section id="features" class="bg-white-alt">
+        <div class="container">
+            <h2 class="text-center mb-5 fw-bold">Platform Features</h2>
+            <div class="row g-4 text-center">
+                <div class="col-md-4">
+                    <div class="card h-100 p-4">
+                        <div class="feature-icon">🌐</div>
+                        <h4>Centralized Hub</h4>
+                        <p class="text-muted">A web-based platform aggregating data from all departments into one dashboard.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 p-4">
+                        <div class="feature-icon">💬</div>
+                        <h4>Forum Interface</h4>
+                        <p class="text-muted">Real-time student feedback loops for courses and professors with threaded discussions.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 p-4">
+                        <div class="feature-icon">📄</div>
+                        <h4>Past Syllabi</h4>
+                        <p class="text-muted">Direct repository access to historical course materials and curriculum requirements.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+	</section>
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container text-center">
+            <p class="mb-0">© CourseConnect. Built for Students.</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Backend Communication Logic -->
+    <script>
+        document.getElementById('searchForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const query = document.getElementById('searchInput').value;
+            const spinner = document.getElementById('loadingSpinner');
+            const resultsContainer = document.getElementById('searchResults');
+            
+            spinner.classList.remove('d-none');
+            resultsContainer.innerHTML = '';
+
+            try {
+                const response = await fetch(`/forum/search/?q=${encodeURIComponent(query)}`);
+                const data = await response.json();
+                
+                spinner.classList.add('d-none');
+                
+                if (data.results.length === 0) {
+                    resultsContainer.innerHTML = `<p class="text-white">No results found for "${query}".</p>`;
+                    return;
+                }
+                
+                data.results.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = 'card p-3 mb-3';
+                    
+                    let subtitle = '';
+                    if (item.type === 'course') subtitle = item.code;
+                    else if (item.type === 'prof') subtitle = item.dept;
+                    else if (item.type === 'dept') subtitle = item.code;
+
+                    card.innerHTML = `
+                        <div class="d-flex justify-content-between">
+                            <h5 class="mb-1">${item.title}</h5>
+                            <span class="anonymous-badge">${item.type === 'course' ? 'Course' : item.type === 'prof' ? 'Professor' : 'Department'}</span>
+                        </div>
+                        <p class="text-muted mb-2">${subtitle}</p>
+                        <a href="${item.url}" class="btn btn-sm btn-primary mt-2">View →</a>
+                    `;
+                    resultsContainer.appendChild(card);
+                });
+
+            } catch (error) {
+                console.error('Search error:', error);
+                spinner.classList.add('d-none');
+                resultsContainer.innerHTML = `<p class="text-white">Something went wrong. Try again.</p>`;
+            }
+        });
+
+        function reportContent() {
+            const reason = prompt("Please state the reason for reporting (Hate speech, spam, etc.):");
+            if(reason) {
+                alert("Thank you. The post has been flagged for moderator review to keep the platform safe.");
+            }
+        }
+    </script>
+</body>
+</html>
