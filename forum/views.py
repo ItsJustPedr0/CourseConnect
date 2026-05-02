@@ -1,12 +1,7 @@
 from django.shortcuts import get_object_or_404, render, redirect
 from django.template import loader
-from django.http import Http404
-from django.http import HttpResponse
-from django.http import JsonResponse
-from .models import Department
-from .models import Course
-from .models import Post
-from .models import Prof
+from django.http import Http404, HttpResponse, JsonResponse
+from .models import Department, Course, Post, Prof
 
 def index(request):
   dept_list = Department.objects.all()

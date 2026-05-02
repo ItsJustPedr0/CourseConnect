@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Syllabi Repository | CourseConnect</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; background-color: #f8f9fa; color: #333; 
+        }
+        .navbar { 
+			min-height: 100px; 
+			display: flex; 
+			align-items: center; 
+		}
+        .hero-section {
+            background: linear-gradient(135deg, #004a99 0%, #007bff 100%); 
+            color: white; 
+			padding: 50px 0;
+        }
+        .filter-bar {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            position: relative;
+            z-index: 10;
+        }
+        .syllabi-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .upload-zone {
+            border: 2px dashed #007bff;
+            background-color: #f0f7ff;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+        }
+        .hidden-input {
+			display: none;
+            margin-top: 10px;
+        }
+		        .btn-post {
+            background-color: #007bff;
+            border: none;
+            padding: 12px 30px;
+            font-weight: 700;
+            transition: 0.3s;
+        }
+        .btn-post:hover {
+			background-color: #0056b3;
+            transform: translateY(-2px);
+        }
+		footer {
+			flex-shrink: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div class="container-fluid px-lg-5">
+            <a class="navbar-brand fw-bold fs-3" href="home.html">CourseConnect</a>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item px-2"><a class="nav-link fs-5" href="{% url 'home' %}">Home</a></li>
+                    <li class="nav-item px-2"><a class="nav-link fs-5" href="{% url 'index' %}">Forum</a></li>
+                    <li class="nav-item px-2"><a class="nav-link fs-5" href="{% url 'add_post' %}">Add Review</a></li>
+                    <li class="nav-item px-2"><a class="nav-link fs-5 active" href {% url 'repository' %}>Syllabi</a></li>
+                    <li class="nav-item ms-lg-4">
+                        <a class="btn btn-outline-light btn-lg px-4" href="#">Login (Anonymous)</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Header -->
+    <header class="hero-section text-center">
+        <div class="container">
+            <h2 class="fw-bold">Syllabi Repository</h2>
+            <p class="opacity-75">Past Syllabi of Courses</p>
+        </div>
+    </header>
+	
+    <div class="container">
+	<br>
+        <div class="row g-3 mb-5">
+            <!-- Sidebar: Upload Form -->
+            <div class="col-lg-3">
+                <div class="card p-4 border-0 shadow-sm rounded-4">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-cloud-upload me-2"></i>Upload New</h5>
+                    <form method="POST" action="{% url 'upload_syllabus' %}" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Department</label>
+                            <select class="form-select" id="upDept" name="dept_id" required>
+                                <option value="" selected disabled>Select Department</option>
+                                {% for dept in dept_list %}
+                                <option value="{{ dept.id }}">{{ dept.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Professor</label>
+                            <select class="form-select" id="upProf" name="prof_id" required>
+                                <option value="" selected disabled>Select Professor</option>
+                            </select>
+                            <input type="text" id="newProfFirstName" name="new_prof_first_name" class="form-control hidden-input mt-2" placeholder="First Name">
+                            <input type="text" id="newProfLastName" name="new_prof_last_name" class="form-control hidden-input mt-2" placeholder="Last Name">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Course</label>
+                            <select class="form-select" id="upCourse" name="course_id" required>
+                                <option value="" selected disabled>Select Course</option>
+                            </select>
+                            <input type="text" id="newCourseInput" name="new_course_name" class="form-control hidden-input mt-2" placeholder="e.g. ENGG 101.01: Circuits 1">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Semester</label>
+                            <select class="form-select" name="semester" required>
+                                <option value="" selected disabled>Select Semester</option>
+                                <option value="1">1st Semester</option>
+                                <option value="2">2nd Semester</option>
+                                <option value="0">Intercession</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">School Year</label>
+                            <input type="text" class="form-control" name="school_year" placeholder="e.g. 2024-2025" required>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label small fw-bold">File (PDF)</label>
+                            <div class="upload-zone">
+                                <i class="bi bi-file-earmark-pdf fs-3 text-primary"></i>
+                                <input type="file" name="file" class="form-control mt-2 shadow-sm" accept=".pdf" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 fw-bold py-2">Upload Syllabus</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Uploaded Syllabus -->
+            <div class="col-lg-9">
+				<div class="filter-bar mb-4">
+                    <div class="row g-3 align-items-center">
+                        <div class="col-auto fw-bold text-muted small">FILTER:</div>
+                        <div class="col">
+                            <select class="form-select" id="filterDept">
+                                <option value="" data-id="">All Departments</option>
+                                {% for dept in dept_list %}
+                                <option value="{{ dept.name }}" data-id="{{ dept.id }}">{{ dept.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col">
+                            <select class="form-select" id="filterCourse">
+                                <option value="" data-id="">All Courses</option>
+                                {% for course in course_list %}
+                                <option value="{{ course.id }}" data-id="{{ course.id }}">{{ course.code }}: {{ course.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col">
+                            <select class="form-select" id="filterProf">
+                                <option value="" data-id="">All Professors</option>
+                                {% for prof in prof_list %}
+                                <option value="{{ prof.id }}" data-id="{{ prof.id }}">{{ prof.full_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col">
+                            <input type="text" class="form-control" id="tableSearch" placeholder="Search...">
+                        </div>
+                    </div>
+                </div>
+				<!-- Sample List placeholder-->
+                <div class="syllabi-card">
+				
+                    <table class="table table-hover mb-0 align-middle" id="syllabiTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">Course</th>
+                                <th>Professor</th>
+                                <th>Term</th>
+                                <th>Version</th>
+                                <th class="text-end pe-4">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="syllabiBody">
+                            {% for syllabus in syllabi %}
+                            <tr>
+                                <td class="ps-4 fw-bold text-primary">{{ syllabus.course.code }}: {{ syllabus.course.name }}</td>
+                                <td>{{ syllabus.prof.full_name }}</td>
+                                <td>{{ syllabus.school_year }} - {{ syllabus.get_semester_display }}</td>
+                                <td>
+                                    <span class="badge bg-secondary">v{{ syllabus.version }}</span>
+                                    {% if syllabus.verified %}
+                                    <span class="badge bg-success ms-1">Verified</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end pe-4">
+                                    <a href="{{ syllabus.file.url }}" class="btn-download" download>
+                                        <i class="bi bi-download"></i> Download
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="5" class="text-center text-muted p-4">No syllabi uploaded yet.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    <div id="noData" class="text-center p-5 d-none">
+                        <i class="bi bi-search fs-1 text-muted"></i>
+                        <p class="mt-2 text-muted">No syllabi matches your filters.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+	</div>
+
+    <footer class="bg-dark text-white py-5">
+        <div class="container text-center">
+            <p class="mb-0">© CourseConnect. Built for Students.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+        <script>
+        // dept change — fetch profs
+        document.getElementById('upDept').addEventListener('change', async function() {
+            const deptId = this.value;
+            const profSelect = document.getElementById('upProf');
+            const courseSelect = document.getElementById('upCourse');
+
+            profSelect.innerHTML = '<option value="" disabled>Loading...</option>';
+            courseSelect.innerHTML = '<option value="" selected disabled>Select Course</option>';
+            document.getElementById('newProfFirstName').style.display = 'none';
+            document.getElementById('newProfLastName').style.display = 'none';
+            document.getElementById('newCourseInput').style.display = 'none';
+
+            try {
+                const response = await fetch(`/forum/get-profs/?dept_id=${deptId}`);
+                const data = await response.json();
+                profSelect.innerHTML = '<option value="" selected disabled>Select Professor</option>';
+                data.profs.forEach(prof => {
+                    profSelect.innerHTML += `<option value="${prof.id}">${prof.first_name} ${prof.last_name}</option>`;
+                });
+                profSelect.innerHTML += '<option value="NEW">-- Add New Professor --</option>';
+            } catch (error) {
+                profSelect.innerHTML = '<option disabled>Error loading professors</option>';
+            }
+        });
+
+        // prof change — fetch courses
+        document.getElementById('upProf').addEventListener('change', async function() {
+            const profId = this.value;
+            const courseSelect = document.getElementById('upCourse');
+            const deptId = document.getElementById('upDept').value;
+
+            document.getElementById('newProfFirstName').style.display = 'none';
+            document.getElementById('newProfLastName').style.display = 'none';
+            document.getElementById('newProfFirstName').removeAttribute('required');
+            document.getElementById('newProfLastName').removeAttribute('required');
+            document.getElementById('newCourseInput').style.display = 'none';
+            document.getElementById('newCourseInput').removeAttribute('required');
+
+            if (profId === 'NEW') {
+                document.getElementById('newProfFirstName').style.display = 'block';
+                document.getElementById('newProfLastName').style.display = 'block';
+                document.getElementById('newProfFirstName').setAttribute('required', 'true');
+                document.getElementById('newProfLastName').setAttribute('required', 'true');
+
+                const response = await fetch(`/forum/get-courses-by-dept/?dept_id=${deptId}`);
+                const data = await response.json();
+                courseSelect.innerHTML = '<option value="" selected disabled>Select Course</option>';
+                data.courses.forEach(course => {
+                    courseSelect.innerHTML += `<option value="${course.id}">${course.code}: ${course.name}</option>`;
+                });
+                courseSelect.innerHTML += '<option value="NEW">-- Add New Course --</option>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`/forum/get-courses/?prof_id=${profId}`);
+                const data = await response.json();
+                courseSelect.innerHTML = '<option value="" selected disabled>Select Course</option>';
+                data.courses.forEach(course => {
+                    courseSelect.innerHTML += `<option value="${course.id}">${course.code}: ${course.name}</option>`;
+                });
+                courseSelect.innerHTML += '<option value="NEW">-- Add New Course --</option>';
+            } catch (error) {
+                courseSelect.innerHTML = '<option disabled>Error loading courses</option>';
+            }
+        });
+
+        // course change — check for NEW
+        document.getElementById('upCourse').addEventListener('change', function() {
+            document.getElementById('newCourseInput').style.display = 'none';
+            document.getElementById('newCourseInput').removeAttribute('required');
+            if (this.value === 'NEW') {
+                document.getElementById('newCourseInput').style.display = 'block';
+                document.getElementById('newCourseInput').setAttribute('required', 'true');
+            }
+        });
+
+        // attach listeners
+        document.getElementById('filterDept').addEventListener('change', async function() {
+            const deptId = this.options[this.selectedIndex].getAttribute('data-id');
+            
+            // reset course and prof dropdowns based on dept
+            const courseSelect = document.getElementById('filterCourse');
+            const profSelect = document.getElementById('filterProf');
+
+            if (!deptId) {
+                // reset to all
+                courseSelect.innerHTML = '<option value="" data-id="">All Courses</option>';
+                {% for course in course_list %}
+                courseSelect.innerHTML += `<option value="{{ course.id }}" data-id="{{ course.id }}">{{ course.code }}: {{ course.name }}</option>`;
+                {% endfor %}
+
+                profSelect.innerHTML = '<option value="" data-id="">All Professors</option>';
+                {% for prof in prof_list %}
+                profSelect.innerHTML += `<option value="{{ prof.id }}" data-id="{{ prof.id }}">{{ prof.full_name }}</option>`;
+                {% endfor %}
+            } else {
+                // fetch courses and profs for this dept
+                const [coursesRes, profsRes] = await Promise.all([
+                    fetch(`/forum/get-courses-by-dept/?dept_id=${deptId}`),
+                    fetch(`/forum/get-profs/?dept_id=${deptId}`)
+                ]);
+                const coursesData = await coursesRes.json();
+                const profsData = await profsRes.json();
+
+                courseSelect.innerHTML = '<option value="" data-id="">All Courses</option>';
+                coursesData.courses.forEach(c => {
+                    courseSelect.innerHTML += `<option value="${c.id}" data-id="${c.id}">${c.code}: ${c.name}</option>`;
+                });
+
+                profSelect.innerHTML = '<option value="" data-id="">All Professors</option>';
+                profsData.profs.forEach(p => {
+                    profSelect.innerHTML += `<option value="${p.id}" data-id="${p.id}">${p.first_name} ${p.last_name}</option>`;
+                });
+            }
+
+            runFilters();
+        });
+
+        document.getElementById('filterCourse').addEventListener('change', runFilters);
+        document.getElementById('filterProf').addEventListener('change', runFilters);
+        document.getElementById('tableSearch').addEventListener('keyup', runFilters);
+
+        async function runFilters() {
+            const deptId = document.getElementById('filterDept').options[document.getElementById('filterDept').selectedIndex].getAttribute('data-id') || '';
+            const courseId = document.getElementById('filterCourse').value || '';
+            const profId = document.getElementById('filterProf').value || '';
+            const query = document.getElementById('tableSearch').value;
+
+            const response = await fetch(`/syllabi/filter/?dept_id=${deptId}&course_id=${courseId}&prof_id=${profId}&q=${encodeURIComponent(query)}`);
+            const data = await response.json();
+
+            const tbody = document.getElementById('syllabiBody');
+            const noData = document.getElementById('noData');
+
+            if (data.syllabi.length === 0) {
+                tbody.innerHTML = '';
+                noData.classList.remove('d-none');
+                return;
+            }
+
+            noData.classList.add('d-none');
+            tbody.innerHTML = '';
+            data.syllabi.forEach(s => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="ps-4 fw-bold text-primary">${s.course}</td>
+                        <td>${s.prof}</td>
+                        <td>${s.term}</td>
+                        <td>
+                            <span class="badge bg-secondary">v${s.version}</span>
+                            ${s.verified ? '<span class="badge bg-success ms-1">Verified</span>' : ''}
+                        </td>
+                        <td class="text-end pe-4">
+                            <a href="${s.file_url}" class="btn-download" download>
+                                <i class="bi bi-download"></i> Download
+                            </a>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // run on page load to populate table
+        runFilters();
+    </script>
+</body>
+</html>
