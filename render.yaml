@@ -1,8 +1,8 @@
 databases:
   - name: mysitedb
     plan: free
-    databaseName: CourseConnect
-    user: CourseConnectAdmin
+    databaseName: mysite
+    user: mysite
 
 services:
   - type: web
