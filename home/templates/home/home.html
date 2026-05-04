@@ -80,8 +80,35 @@
                 <li class="nav-item px-2"><a class="nav-link fs-5" href="{% url 'index' %}">Forum</a></li>
                 <li class="nav-item px-2"><a class="nav-link fs-5" href="{% url 'add_post' %}">Add Review</a></li>
                 <li class="nav-item px-2"><a class="nav-link fs-5" href="{% url 'repository' %}">Syllabi</a></li>
-                <li class="nav-item ms-lg-4">
-                    <a class="btn btn-outline-light btn-lg px-4" href="#">Login (Anonymous)</a>
+                <li class="nav-item dropdown ms-lg-4">
+                {% if user.is_authenticated %}
+                <a class="btn btn-outline-light btn-lg px-4 dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <span class="me-2 small">ID: {{ user.student_id }}</span>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark shadow-lg border-secondary mt-2" aria-labelledby="userDropdown" style="min-width: 250px; border-radius: 12px;">
+                    <li>
+                    <div class="px-4 py-3 border-bottom border-secondary mb-2">
+                        <h6 class="mb-0 fw-bold text-warning">Anonymous Student Profile</h6>
+                        <small class="text-white-50">
+                        {% if user.is_authenticated %}Logged in{% else %}Guest{% endif %}
+                        </small>
+                    </div>
+                    </li>
+                    <li>
+                    <a class="dropdown-item py-2 d-flex align-items-center text-danger fw-bold" href="{% url 'logout' %}">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-box-arrow-right me-2" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0v2z"/>
+                        <path fill-rule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3z"/>
+                        </svg>
+                        Sign Out
+                    </a>
+                    </li>
+                </ul>
+                {% else %}
+                <a class="btn btn-outline-light btn-lg px-4 d-flex align-items-center" href="{% url 'login' %}">
+                    <span class="me-2 small">Sign In</span>
+                </a>
+                {% endif %}
                 </li>
             </ul>
         </div>

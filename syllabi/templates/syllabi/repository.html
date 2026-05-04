@@ -70,15 +70,42 @@
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
         <div class="container-fluid px-lg-5">
-            <a class="navbar-brand fw-bold fs-3" href="home.html">CourseConnect</a>
+            <a class="navbar-brand fw-bold fs-3" href="{% url 'home' %}">CourseConnect</a>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto align-items-center">
                     <li class="nav-item px-2"><a class="nav-link fs-5" href="{% url 'home' %}">Home</a></li>
                     <li class="nav-item px-2"><a class="nav-link fs-5" href="{% url 'index' %}">Forum</a></li>
                     <li class="nav-item px-2"><a class="nav-link fs-5" href="{% url 'add_post' %}">Add Review</a></li>
                     <li class="nav-item px-2"><a class="nav-link fs-5 active" href {% url 'repository' %}>Syllabi</a></li>
-                    <li class="nav-item ms-lg-4">
-                        <a class="btn btn-outline-light btn-lg px-4" href="#">Login (Anonymous)</a>
+                    <li class="nav-item dropdown ms-lg-4">
+                    {% if user.is_authenticated %}
+                    <a class="btn btn-outline-light btn-lg px-4 dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <span class="me-2 small">ID: {{ user.student_id }}</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark shadow-lg border-secondary mt-2" aria-labelledby="userDropdown" style="min-width: 250px; border-radius: 12px;">
+                        <li>
+                        <div class="px-4 py-3 border-bottom border-secondary mb-2">
+                            <h6 class="mb-0 fw-bold text-warning">Anonymous Student Profile</h6>
+                            <small class="text-white-50">
+                            {% if user.is_authenticated %}Logged in{% else %}Guest{% endif %}
+                            </small>
+                        </div>
+                        </li>
+                        <li>
+                        <a class="dropdown-item py-2 d-flex align-items-center text-danger fw-bold" href="{% url 'logout' %}">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-box-arrow-right me-2" viewBox="0 0 16 16">
+                            <path fill-rule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0v2z"/>
+                            <path fill-rule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3z"/>
+                            </svg>
+                            Sign Out
+                        </a>
+                        </li>
+                    </ul>
+                    {% else %}
+                    <a class="btn btn-outline-light btn-lg px-4 d-flex align-items-center" href="{% url 'login' %}">
+                        <span class="me-2 small">Sign In</span>
+                    </a>
+                    {% endif %}
                     </li>
                 </ul>
             </div>
@@ -113,20 +140,20 @@
                         </div>
 
                         <div class="mb-3">
+                            <label class="form-label small fw-bold">Course</label>
+                            <select class="form-select" id="upCourse" name="course_id" required>
+                                <option value="" selected disabled>Select Course</option>
+                            </select>
+                            <input type="text" id="newCourseInput" name="new_course_name" class="form-control hidden-input mt-2" placeholder="e.g. ENGG 101.01: Circuits 1">
+                        </div>
+
+                        <div class="mb-3">
                             <label class="form-label small fw-bold">Professor</label>
                             <select class="form-select" id="upProf" name="prof_id" required>
                                 <option value="" selected disabled>Select Professor</option>
                             </select>
                             <input type="text" id="newProfFirstName" name="new_prof_first_name" class="form-control hidden-input mt-2" placeholder="First Name">
                             <input type="text" id="newProfLastName" name="new_prof_last_name" class="form-control hidden-input mt-2" placeholder="Last Name">
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">Course</label>
-                            <select class="form-select" id="upCourse" name="course_id" required>
-                                <option value="" selected disabled>Select Course</option>
-                            </select>
-                            <input type="text" id="newCourseInput" name="new_course_name" class="form-control hidden-input mt-2" placeholder="e.g. ENGG 101.01: Circuits 1">
                         </div>
 
                         <div class="mb-3">
@@ -245,93 +272,106 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
         <script>
-        // dept change — fetch profs
-        document.getElementById('upDept').addEventListener('change', async function() {
-            const deptId = this.value;
-            const profSelect = document.getElementById('upProf');
-            const courseSelect = document.getElementById('upCourse');
+        const uploadProfSelect = document.getElementById('upProf');
+        const uploadCourseSelect = document.getElementById('upCourse');
 
-            profSelect.innerHTML = '<option value="" disabled>Loading...</option>';
-            courseSelect.innerHTML = '<option value="" selected disabled>Select Course</option>';
-            document.getElementById('newProfFirstName').style.display = 'none';
-            document.getElementById('newProfLastName').style.display = 'none';
-            document.getElementById('newCourseInput').style.display = 'none';
-
-            try {
-                const response = await fetch(`/forum/get-profs/?dept_id=${deptId}`);
-                const data = await response.json();
-                profSelect.innerHTML = '<option value="" selected disabled>Select Professor</option>';
-                data.profs.forEach(prof => {
-                    profSelect.innerHTML += `<option value="${prof.id}">${prof.first_name} ${prof.last_name}</option>`;
-                });
-                profSelect.innerHTML += '<option value="NEW">-- Add New Professor --</option>';
-            } catch (error) {
-                profSelect.innerHTML = '<option disabled>Error loading professors</option>';
-            }
-        });
-
-        // prof change — fetch courses
-        document.getElementById('upProf').addEventListener('change', async function() {
-            const profId = this.value;
-            const courseSelect = document.getElementById('upCourse');
-            const deptId = document.getElementById('upDept').value;
-
+        function resetUploadProfSelect() {
+            uploadProfSelect.innerHTML = '<option value="" selected disabled>Select Professor</option>';
+            uploadProfSelect.disabled = true;
             document.getElementById('newProfFirstName').style.display = 'none';
             document.getElementById('newProfLastName').style.display = 'none';
             document.getElementById('newProfFirstName').removeAttribute('required');
             document.getElementById('newProfLastName').removeAttribute('required');
+        }
+
+        function populateUploadProfSelect(profs) {
+            uploadProfSelect.innerHTML = '<option value="" selected disabled>Select Professor</option>';
+            if (profs.length === 0) {
+                uploadProfSelect.innerHTML += '<option disabled>No professors found</option>';
+            } else {
+                profs.forEach(prof => {
+                    uploadProfSelect.innerHTML += `<option value="${prof.id}">${prof.first_name} ${prof.last_name}</option>`;
+                });
+            }
+            uploadProfSelect.innerHTML += '<option value="NEW">-- Add New Professor --</option>';
+            uploadProfSelect.disabled = false;
+        }
+
+        document.getElementById('upDept').addEventListener('change', async function() {
+            const deptId = this.value;
+            uploadCourseSelect.innerHTML = '<option value="" selected disabled>Loading...</option>';
+            resetUploadProfSelect();
             document.getElementById('newCourseInput').style.display = 'none';
             document.getElementById('newCourseInput').removeAttribute('required');
 
-            if (profId === 'NEW') {
-                document.getElementById('newProfFirstName').style.display = 'block';
-                document.getElementById('newProfLastName').style.display = 'block';
-                document.getElementById('newProfFirstName').setAttribute('required', 'true');
-                document.getElementById('newProfLastName').setAttribute('required', 'true');
-
-                const response = await fetch(`/forum/get-courses-by-dept/?dept_id=${deptId}`);
-                const data = await response.json();
-                courseSelect.innerHTML = '<option value="" selected disabled>Select Course</option>';
-                data.courses.forEach(course => {
-                    courseSelect.innerHTML += `<option value="${course.id}">${course.code}: ${course.name}</option>`;
-                });
-                courseSelect.innerHTML += '<option value="NEW">-- Add New Course --</option>';
+            if (!deptId) {
+                uploadCourseSelect.innerHTML = '<option value="" selected disabled>Select Course</option>';
                 return;
             }
 
             try {
-                const response = await fetch(`/forum/get-courses/?prof_id=${profId}`);
+                const response = await fetch(`/forum/get-courses-by-dept/?dept_id=${deptId}`);
                 const data = await response.json();
-                courseSelect.innerHTML = '<option value="" selected disabled>Select Course</option>';
-                data.courses.forEach(course => {
-                    courseSelect.innerHTML += `<option value="${course.id}">${course.code}: ${course.name}</option>`;
-                });
-                courseSelect.innerHTML += '<option value="NEW">-- Add New Course --</option>';
+                uploadCourseSelect.innerHTML = '<option value="" selected disabled>Select Course</option>';
+                if (data.courses.length === 0) {
+                    uploadCourseSelect.innerHTML += '<option disabled>No courses found</option>';
+                } else {
+                    data.courses.forEach(course => {
+                        uploadCourseSelect.innerHTML += `<option value="${course.id}">${course.code}: ${course.name}</option>`;
+                    });
+                }
+                uploadCourseSelect.innerHTML += '<option value="NEW">-- Add New Course --</option>';
             } catch (error) {
-                courseSelect.innerHTML = '<option disabled>Error loading courses</option>';
+                uploadCourseSelect.innerHTML = '<option disabled>Error loading courses</option>';
             }
         });
 
-        // course change — check for NEW
-        document.getElementById('upCourse').addEventListener('change', function() {
+        document.getElementById('upCourse').addEventListener('change', async function() {
+            const courseId = this.value;
+            resetUploadProfSelect();
             document.getElementById('newCourseInput').style.display = 'none';
             document.getElementById('newCourseInput').removeAttribute('required');
-            if (this.value === 'NEW') {
+
+            if (!courseId) {
+                return;
+            }
+
+            if (courseId === 'NEW') {
                 document.getElementById('newCourseInput').style.display = 'block';
                 document.getElementById('newCourseInput').setAttribute('required', 'true');
+                const deptId = document.getElementById('upDept').value;
+                if (!deptId) {
+                    return;
+                }
+                try {
+                    const response = await fetch(`/forum/get-profs/?dept_id=${deptId}`);
+                    const data = await response.json();
+                    populateUploadProfSelect(data.profs);
+                } catch (error) {
+                    uploadProfSelect.innerHTML = '<option disabled>Error loading professors</option>';
+                }
+                return;
+            }
+
+            try {
+                const response = await fetch(`/forum/get-profs-by-course/?course_id=${courseId}`);
+                const data = await response.json();
+                populateUploadProfSelect(data.profs);
+            } catch (error) {
+                uploadProfSelect.innerHTML = '<option disabled>Error loading professors</option>';
             }
         });
 
         // attach listeners
         document.getElementById('filterDept').addEventListener('change', async function() {
             const deptId = this.options[this.selectedIndex].getAttribute('data-id');
-            
-            // reset course and prof dropdowns based on dept
             const courseSelect = document.getElementById('filterCourse');
             const profSelect = document.getElementById('filterProf');
 
+            courseSelect.innerHTML = '<option value="" data-id="">Loading...</option>';
+            profSelect.innerHTML = '<option value="" data-id="">All Professors</option>';
+
             if (!deptId) {
-                // reset to all
                 courseSelect.innerHTML = '<option value="" data-id="">All Courses</option>';
                 {% for course in course_list %}
                 courseSelect.innerHTML += `<option value="{{ course.id }}" data-id="{{ course.id }}">{{ course.code }}: {{ course.name }}</option>`;
@@ -341,8 +381,11 @@
                 {% for prof in prof_list %}
                 profSelect.innerHTML += `<option value="{{ prof.id }}" data-id="{{ prof.id }}">{{ prof.full_name }}</option>`;
                 {% endfor %}
-            } else {
-                // fetch courses and profs for this dept
+                runFilters();
+                return;
+            }
+
+            try {
                 const [coursesRes, profsRes] = await Promise.all([
                     fetch(`/forum/get-courses-by-dept/?dept_id=${deptId}`),
                     fetch(`/forum/get-profs/?dept_id=${deptId}`)
@@ -359,12 +402,60 @@
                 profsData.profs.forEach(p => {
                     profSelect.innerHTML += `<option value="${p.id}" data-id="${p.id}">${p.first_name} ${p.last_name}</option>`;
                 });
+            } catch (error) {
+                console.error('Error loading filter options:', error);
+                courseSelect.innerHTML = '<option disabled>Error loading courses</option>';
+                profSelect.innerHTML = '<option disabled>Error loading professors</option>';
             }
 
             runFilters();
         });
 
-        document.getElementById('filterCourse').addEventListener('change', runFilters);
+        document.getElementById('filterCourse').addEventListener('change', async function() {
+            const courseId = this.value;
+            const profSelect = document.getElementById('filterProf');
+            const deptId = document.getElementById('filterDept').options[document.getElementById('filterDept').selectedIndex].getAttribute('data-id') || '';
+
+            profSelect.innerHTML = '<option value="" data-id="">Loading...</option>';
+
+            if (!courseId) {
+                if (deptId) {
+                    try {
+                        const response = await fetch(`/forum/get-profs/?dept_id=${deptId}`);
+                        const data = await response.json();
+                        profSelect.innerHTML = '<option value="" data-id="">All Professors</option>';
+                        data.profs.forEach(p => {
+                            profSelect.innerHTML += `<option value="${p.id}" data-id="${p.id}">${p.first_name} ${p.last_name}</option>`;
+                        });
+                    } catch (error) {
+                        console.error('Error loading professors:', error);
+                        profSelect.innerHTML = '<option disabled>Error loading professors</option>';
+                    }
+                } else {
+                    profSelect.innerHTML = '<option value="" data-id="">All Professors</option>';
+                    {% for prof in prof_list %}
+                    profSelect.innerHTML += `<option value="{{ prof.id }}" data-id="{{ prof.id }}">{{ prof.full_name }}</option>`;
+                    {% endfor %}
+                }
+                runFilters();
+                return;
+            }
+
+            try {
+                const response = await fetch(`/forum/get-profs-by-course/?course_id=${courseId}`);
+                const data = await response.json();
+                profSelect.innerHTML = '<option value="" data-id="">All Professors</option>';
+                data.profs.forEach(p => {
+                    profSelect.innerHTML += `<option value="${p.id}" data-id="${p.id}">${p.first_name} ${p.last_name}</option>`;
+                });
+            } catch (error) {
+                console.error('Error loading professors for course:', error);
+                profSelect.innerHTML = '<option disabled>Error loading professors</option>';
+            }
+
+            runFilters();
+        });
+
         document.getElementById('filterProf').addEventListener('change', runFilters);
         document.getElementById('tableSearch').addEventListener('keyup', runFilters);
 

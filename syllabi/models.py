@@ -1,4 +1,6 @@
 from django.db import models
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
 from forum.models import Prof, Course, Department
 
 class Syllabus(models.Model):

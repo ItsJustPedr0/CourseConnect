@@ -2,7 +2,9 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
 from forum.models import Department, Course, Prof
 from .models import Syllabus
+from django.contrib.auth.decorators import login_required
 
+@login_required(login_url='login')
 def repository(request):
   dept_list = Department.objects.all()
   course_list = Course.objects.all()
@@ -24,6 +26,11 @@ def upload_syllabus(request):
     semester = request.POST.get('semester')
     school_year = request.POST.get('school_year')
     file = request.FILES.get('file')
+
+    if not file:
+      return HttpResponse("Please upload a syllabus file.", status=400)
+    if not semester or not school_year:
+      return HttpResponse("Please select a semester and school year.", status=400)
 
     dept = get_object_or_404(Department, id=dept_id)
 

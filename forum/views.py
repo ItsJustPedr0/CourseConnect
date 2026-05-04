@@ -2,7 +2,9 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.template import loader
 from django.http import Http404, HttpResponse, JsonResponse
 from .models import Department, Course, Post, Prof
+from django.contrib.auth.decorators import login_required
 
+@login_required(login_url='login')
 def index(request):
   dept_list = Department.objects.all()
   template = loader.get_template("forum/index.html")
@@ -10,6 +12,7 @@ def index(request):
   return HttpResponse(template.render(context, request))
 # Create your views here.
 
+@login_required(login_url='login')
 def dept_index(request, abbrev):
   target_dept = get_object_or_404(Department, slug=abbrev)
   courses_list = Course.objects.filter(dept = target_dept.id)
@@ -18,6 +21,7 @@ def dept_index(request, abbrev):
   context = {"courses_list": courses_list, "profs_list": profs_list, "target_dept": target_dept}
   return HttpResponse(template.render(context, request))
 
+@login_required(login_url='login')
 def course_detail(request, abbrev, course_slug):
   target_dept = get_object_or_404(Department, slug=abbrev)
   target_course = get_object_or_404(Course, slug = course_slug)
@@ -26,6 +30,7 @@ def course_detail(request, abbrev, course_slug):
   context = {"posts_list": posts_list, "target_course": target_course}
   return HttpResponse(template.render(context, request))
 
+@login_required(login_url='login')
 def prof_detail(request, abbrev, prof_slug):
   target_dept = get_object_or_404(Department, slug=abbrev)
   target_prof = get_object_or_404(Prof, slug = prof_slug)
@@ -77,16 +82,20 @@ def search(request):
       })
   return JsonResponse({'results': results, 'query': query})
 
+@login_required(login_url='login')
 def add_post(request):
   depts = Department.objects.all()
   profs = Prof.objects.none()
   courses = Course.objects.none()
 
   if request.method == 'POST':
-    title = request.POST.get('title')
-    body = request.POST.get('body')
+    title = request.POST.get('title', '').strip()
+    body = request.POST.get('body', '').strip()
     prof_id = request.POST.get('prof_id')
     course_id = request.POST.get('course_id')
+
+    if not title or not body:
+      return HttpResponse("Please enter both title and body.", status=400)
 
     print("prof_id:", prof_id)
     print("course_id:", course_id)
@@ -149,6 +158,12 @@ def get_courses_by_prof(request):
   prof = get_object_or_404(Prof, id=prof_id)
   courses = Course.objects.filter(prof=prof).values('id', 'name', 'code')
   return JsonResponse({'courses': list(courses)})
+
+def get_profs_by_course(request):
+  course_id = request.GET.get('course_id')
+  course = get_object_or_404(Course, id=course_id)
+  profs = course.prof.all().values('id', 'first_name', 'last_name', 'slug')
+  return JsonResponse({'profs': list(profs)})
 
 def get_courses_by_dept(request):
     dept_id = request.GET.get('dept_id')
