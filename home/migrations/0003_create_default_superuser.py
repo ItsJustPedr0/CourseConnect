@@ -1,6 +1,7 @@
 # Generated migration to create a default superuser on database initialization
 
 from django.db import migrations
+from django.contrib.auth.hashers import make_password
 import os
 
 
@@ -12,10 +13,12 @@ def create_default_superuser(apps, schema_editor):
     password = os.getenv('SUPERUSER_PASSWORD', 'admin123')
     
     if not CustomUser.objects.filter(student_id=student_id).exists():
-        CustomUser.objects.create_superuser(
+        CustomUser.objects.create(
             student_id=student_id,
             email=email,
-            password=password
+            password=make_password(password),
+            is_staff=True,
+            is_superuser=True
         )
 
 
