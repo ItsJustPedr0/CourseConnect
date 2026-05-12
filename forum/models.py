@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils.text import slugify
+from home.models import CustomUser
 
 class Department(models.Model):
   name = models.CharField(max_length=100)
@@ -56,4 +57,34 @@ class Post(models.Model):
   course = models.ForeignKey(Course, on_delete=models.CASCADE, null=True, blank=True, related_name="posts")
   def __str__(self):
     return self.title
-# Create your models here.
+
+class Comment(models.Model):
+  post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="comments")
+  user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+  body = models.TextField()
+  created_at = models.DateTimeField(auto_now_add=True)
+  
+  def __str__(self):
+    return f"Comment on {self.post.title} by {self.user.student_id}"
+  
+  class Meta:
+    ordering = ['-created_at']
+
+class Report(models.Model):
+  REPORT_CHOICES = [
+    ('spam', 'Spam'),
+    ('harassment', 'Harassment'),
+    ('inaccurate', 'Inaccurate Information'),
+  ]
+  
+  post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="reports")
+  user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+  report_type = models.CharField(max_length=20, choices=REPORT_CHOICES)
+  explanation = models.TextField()
+  created_at = models.DateTimeField(auto_now_add=True)
+  
+  def __str__(self):
+    return f"Report on {self.post.title} - {self.report_type}"
+  
+  class Meta:
+    ordering = ['-created_at']

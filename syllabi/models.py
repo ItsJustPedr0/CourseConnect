@@ -27,3 +27,12 @@ class Syllabus(models.Model):
   def __str__(self):
     first_year = self.school_year.split('-')[0].strip()
     return f"CS-{self.dept.slug}-{self.course.code}-{self.prof.slug}-{first_year}-{self.semester}"
+
+# Signal to delete file when Syllabus object is deleted
+@receiver(post_delete, sender=Syllabus)
+def delete_syllabus_file(sender, instance, **kwargs):
+  """Delete the file from storage when the Syllabus object is deleted"""
+  if instance.file:
+    # Delete the file from storage
+    if instance.file.storage.exists(instance.file.name):
+      instance.file.storage.delete(instance.file.name)

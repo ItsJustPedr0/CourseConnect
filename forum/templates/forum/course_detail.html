@@ -60,6 +60,44 @@
         }
         section { padding: 40px 0; }
         .breadcrumb-item a { text-decoration: none; color: #007bff; }
+
+        /* Inline Sections Styling */
+        .action-section {
+            border-radius: 8px;
+            padding: 20px;
+            display: none; /* Hidden by default */
+            margin-top: 20px;
+            font-size: 0.85rem;
+        }
+        .comment-bg { background-color: #f1f3f5; }
+        .report-bg { background-color: #fff5f5; border: 1px solid #ffc9c9; }
+
+        /* Comment List Styling */
+        .comment-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            padding: 0;
+        }
+        .comment-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border-left: 3px solid #007bff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+        .comment-item:last-child {
+            margin-bottom: 0;
+        }
+        .load-more-btn {
+            display: block;
+            width: 100%;
+            text-align: center;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 0.85rem;
+        }
     </style>
 </head>
 <body>
@@ -146,7 +184,7 @@
         <hr class="mt-4">
     </div>
 
-    <!-- Main Content: Courses List -->
+    <!-- Main Content: Course Posts -->
     
     <section>
         <div class="container">
@@ -155,19 +193,103 @@
                 <div>
                     <h3 class="fw-bold mb-0">Posts for {{target_course}}</h3>
                 </div>
-          
             </div>
 
             <div class="row g-4" id="courseGrid">
                 {% for post in posts_list %}
                 <div class="col-md-6 col-lg-4">
-                    
-                    <div class="card directory-card p-4">
-                        <h5 class="fw-bold">{{ post.title }}</h5>
-                        <h6>Professor: {{post.prof}}</h6>
-                        <p> {{post.body}} </p>
+                    <div class="card directory-card h-100 d-flex flex-column">
+                        <div class="p-4 flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h5 class="fw-bold text-primary mb-0">{{ post.title }}</h5>
+                                <span class="anonymous-badge">Anonymous</span>
+                            </div>
+                            <h6 class="text-muted small">Professor: {{ post.prof }}</h6>
+                            <hr>
+                            <p class="mb-0">{{ post.body }}</p>
+                        </div>
+                        
+                        <div class="card-footer p-4 pt-0 bg-transparent border-0">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <button class="btn btn-sm btn-outline-primary fw-bold" onclick="toggleSection('comment', '{{ post.id }}')">
+                                    <i class="bi bi-chat-left-text me-1"></i> Comments ({{ post.comments.count }})
+                                </button>
+                                <button class="btn btn-sm btn-link text-danger text-decoration-none fw-bold small" onclick="toggleSection('report', '{{ post.id }}')">
+                                    <i class="bi bi-flag me-1"></i> Report
+                                </button>
+                            </div>
+
+                            <!-- Inline Comment Section (Shown by default) -->
+                            <div id="comment-{{ post.id }}" class="action-section comment-bg shadow-sm" style="display: block;">
+                                <!-- Display Comments -->
+                                <div class="comment-list" id="comment-list-{{ post.id }}">
+                                    {% if post.comments.all %}
+                                    <h6 class="fw-bold small mb-3 text-muted">Others' Comments:</h6>
+                                    
+                                    {% for comment in post.comments.all|slice:":3" %}
+                                    <div class="comment-item">
+                                        <div class="d-flex justify-content-between mb-1">
+                                            <span class="fw-bold text-primary small">Anonymous User</span>
+                                            <span class="text-muted" style="font-size: 0.7rem;">{{ comment.created_at|timesince }} ago</span>
+                                        </div>
+                                        <p class="mb-0">{{ comment.body }}</p>
+                                    </div>
+                                    {% endfor %}
+
+                                    {% if post.comments.count > 3 %}
+                                    <button class="btn btn-link btn-sm text-primary fw-bold load-more-btn" onclick="showAllComments('{{ post.id }}')">
+                                        Show more comments ({{ post.comments.count|add:"-3" }} more)
+                                    </button>
+                                    <div id="hidden-comments-{{ post.id }}" style="display: none;">
+                                        {% for comment in post.comments.all|slice:"3:" %}
+                                        <div class="comment-item">
+                                            <div class="d-flex justify-content-between mb-1">
+                                                <span class="fw-bold text-primary small">Anonymous User</span>
+                                                <span class="text-muted" style="font-size: 0.7rem;">{{ comment.created_at|timesince }} ago</span>
+                                            </div>
+                                            <p class="mb-0">{{ comment.body }}</p>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                    {% else %}
+                                    <p class="text-muted small">No comments yet. Be the first!</p>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Add Comment Form -->
+                                <div class="mt-3 pt-3 border-top border-secondary-subtle">
+                                    {% if user.is_authenticated %}
+                                    <textarea class="form-control form-control-sm mb-2" id="comment-text-{{ post.id }}" placeholder="Write a response..." rows="2"></textarea>
+                                    <div class="text-end">
+                                        <button class="btn btn-primary btn-sm" onclick="submitComment('{{ post.id }}')">Post</button>
+                                    </div>
+                                    {% else %}
+                                    <p class="text-muted small"><a href="{% url 'login' %}">Sign in</a> to comment.</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Inline Report Section (Hidden by default) -->
+                            <div id="report-{{ post.id }}" class="action-section report-bg shadow-sm">
+                                <label class="fw-bold text-danger mb-2">Report this review</label>
+                                {% if user.is_authenticated %}
+                                <select class="form-select form-select-sm mb-2" id="report-type-{{ post.id }}">
+                                    <option value="">Select a reason...</option>
+                                    <option value="spam">Spam</option>
+                                    <option value="harassment">Harassment</option>
+                                    <option value="inaccurate">Inaccurate Information</option>
+                                </select>
+                                <textarea class="form-control form-control-sm mb-2" id="report-text-{{ post.id }}" placeholder="Explain why..." rows="2"></textarea>
+                                <div class="text-end">
+                                    <button class="btn btn-danger btn-sm" onclick="submitReport('{{ post.id }}')">Submit Report</button>
+                                </div>
+                                {% else %}
+                                <p class="text-muted small"><a href="{% url 'login' %}">Sign in</a> to report.</p>
+                                {% endif %}
+                            </div>
+                        </div>
                     </div>
-            
                 </div>
                 {% empty %}
                 <p class="text-muted">No posts available.</p>
@@ -187,10 +309,123 @@
         </div>
     </footer>
 
-    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
+        function toggleSection(type, postId) {
+            const commentBox = document.getElementById(`comment-${postId}`);
+            const reportBox = document.getElementById(`report-${postId}`);
+
+            if (type === 'comment') {
+                reportBox.style.display = "none";
+                commentBox.style.display = (commentBox.style.display === "block") ? "none" : "block";
+            } else {
+                commentBox.style.display = "none";
+                reportBox.style.display = (reportBox.style.display === "block") ? "none" : "block";
+            }
+        }
+
+        function showAllComments(postId) {
+            const hiddenComments = document.getElementById(`hidden-comments-${postId}`);
+            const loadMoreBtn = event.target;
+            
+            if (hiddenComments.style.display === "none") {
+                hiddenComments.style.display = "block";
+                loadMoreBtn.textContent = "Show fewer comments";
+            } else {
+                hiddenComments.style.display = "none";
+                loadMoreBtn.textContent = `Show more comments`;
+            }
+        }
+
+        function submitComment(postId) {
+            const commentText = document.getElementById(`comment-text-${postId}`).value;
+            
+            if (!commentText.trim()) {
+                alert('Please enter a comment.');
+                return;
+            }
+
+            fetch(`/forum/post/${postId}/comment/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    body: commentText
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Comment posted successfully!');
+                    location.reload();
+                } else {
+                    alert('Error posting comment: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error posting comment.');
+            });
+        }
+
+        function submitReport(postId) {
+            const reportType = document.getElementById(`report-type-${postId}`).value;
+            const reportText = document.getElementById(`report-text-${postId}`).value;
+            
+            if (!reportType) {
+                alert('Please select a report reason.');
+                return;
+            }
+            
+            if (!reportText.trim()) {
+                alert('Please explain why you are reporting this.');
+                return;
+            }
+
+            fetch(`/forum/post/${postId}/report/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    report_type: reportType,
+                    explanation: reportText
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Report submitted successfully. Thank you!');
+                    document.getElementById(`report-${postId}`).style.display = "none";
+                } else {
+                    alert('Error submitting report: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error submitting report.');
+            });
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
         document.getElementById('searchForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
