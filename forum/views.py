@@ -1,8 +1,9 @@
 from django.shortcuts import get_object_or_404, render, redirect
 from django.template import loader
 from django.http import Http404, HttpResponse, JsonResponse
-from .models import Department, Course, Post, Prof
+from .models import Department, Course, Post, Prof, Comment, Report
 from django.contrib.auth.decorators import login_required
+import json
 
 @login_required(login_url='login')
 def index(request):
@@ -170,3 +171,60 @@ def get_courses_by_dept(request):
     dept = get_object_or_404(Department, id=dept_id)
     courses = Course.objects.filter(dept=dept).values('id', 'name', 'code')
     return JsonResponse({'courses': list(courses)})
+
+@login_required(login_url='login')
+def add_comment(request, post_id):
+  if request.method != 'POST':
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
+  
+  try:
+    data = json.loads(request.body)
+    body = data.get('body', '').strip()
+    
+    if not body:
+      return JsonResponse({'error': 'Comment cannot be empty'}, status=400)
+    
+    post = get_object_or_404(Post, id=post_id)
+    comment = Comment.objects.create(
+      post=post,
+      user=request.user,
+      body=body
+    )
+    
+    return JsonResponse({'success': True, 'comment_id': comment.id})
+  except json.JSONDecodeError:
+    return JsonResponse({'error': 'Invalid JSON'}, status=400)
+  except Exception as e:
+    return JsonResponse({'error': str(e)}, status=500)
+
+@login_required(login_url='login')
+def add_report(request, post_id):
+  if request.method != 'POST':
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
+  
+  try:
+    data = json.loads(request.body)
+    report_type = data.get('report_type', '').strip()
+    explanation = data.get('explanation', '').strip()
+    
+    if not report_type or not explanation:
+      return JsonResponse({'error': 'Report type and explanation are required'}, status=400)
+    
+    # Validate report type
+    valid_types = ['spam', 'harassment', 'inaccurate']
+    if report_type not in valid_types:
+      return JsonResponse({'error': 'Invalid report type'}, status=400)
+    
+    post = get_object_or_404(Post, id=post_id)
+    report = Report.objects.create(
+      post=post,
+      user=request.user,
+      report_type=report_type,
+      explanation=explanation
+    )
+    
+    return JsonResponse({'success': True, 'report_id': report.id})
+  except json.JSONDecodeError:
+    return JsonResponse({'error': 'Invalid JSON'}, status=400)
+  except Exception as e:
+    return JsonResponse({'error': str(e)}, status=500)

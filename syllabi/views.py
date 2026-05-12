@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from forum.models import Department, Course, Prof
 from .models import Syllabus
 from django.contrib.auth.decorators import login_required
